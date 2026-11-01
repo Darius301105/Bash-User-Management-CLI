@@ -1,48 +1,54 @@
 #!/bin/bash
+# Registers a new user: validates the input, hashes the password and creates a home directory.
 
 USERS_CSV="users.csv"
 HOMES_DIR="homes"
 
-read -p "Nume utilizator: " username
+read -p "Username: " username
 
+# Usernames must be unique
 if grep -q ",$username," "$USERS_CSV"; then
-    echo "Utilizatorul deja exista!"
+    echo "This user already exists!"
     exit 1
 fi
 
+# Basic email format validation
 read -p "Email: " email
 if ! echo "$email" | grep -Eq "^[^@]+@[^@]+\.[a-z]{2,}$"; then
-    echo "Email-ul este invalid!"
+    echo "Invalid email address!"
     exit 2
 fi
 
-echo "Parola trebuie sa aiba minim 6 caractere si sa contina litere si cifre!"
+# Keep asking until the password is valid and confirmed
+echo "The password must have at least 6 characters and contain both letters and digits."
 while [[ ${#password} -lt 6 || ! $password =~ [0-9] || ! $password =~ [A-Za-z] || ! "$password" == "$password2" ]]; do
-read -s -p "Parola: " password; echo
-read -s -p "Confirmare parola: " password2; echo
+read -s -p "Password: " password; echo
+read -s -p "Confirm password: " password2; echo
 if [ "$password" != "$password2" ]; then
-	echo "Boss, parolele nu coincid! Mai incearca o data:";
+	echo "The passwords do not match. Please try again."
 fi
 if [[ ! $password =~ [0-9] ]]; then
-	echo "Parola nu contine cifre! Mai citeste o data cu atentie mesajul de mai sus!"
+	echo "The password must contain at least one digit."
 fi
 if [[ ! $password =~ [A-Za-z] ]]; then
-	echo "Sefu, parola ta nu contine litere! Te rog fii mai atent data viitoare!"
+	echo "The password must contain at least one letter."
 fi
 if [ ${#password} -lt 6 ]; then
-	echo "Parola are mai putin de 6 caractere! Iti mai dau o sansa!"
+	echo "The password must be at least 6 characters long."
 fi
 done
 
+# Store only the SHA-256 hash of the password, never the plain text
 HASH=$(echo "$password" | sha256sum | cut -d' ' -f1)
-ID=$(date +%s%N | cut -b1-10) 
+ID=$(date +%s%N | cut -b1-10)
 HOMEDIR="$HOMES_DIR/$username"
 
 mkdir -p "$HOMEDIR"
 
 echo "$ID,$username,$email,$HASH,$HOMEDIR," >> "$USERS_CSV"
 
-echo "Contul $username a fost creat cu succes. Email de confirmare trimis la $email!"
-echo "Inregistrarea a fost realizata cu succes!" | mail -s "Confirmare inregistrare" "$email" 
+echo "Account $username was created successfully. A confirmation email was sent to $email."
+# Requires a configured mail command
+echo "Your registration was completed successfully!" | mail -s "Registration confirmation" "$email"
 
 exit 0

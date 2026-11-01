@@ -35,7 +35,7 @@ The project provides functionality for **user registration**, **login**, **logou
 
 ---
 
-### 📊 User Report Generation (`generate_user.sh`)
+### 📊 User Report Generation (`generate_report.sh`)
 - Receives the username as an argument
 - Locates the user's home directory
 - Generates a `.txt` report containing:
